@@ -1,0 +1,5 @@
+# Deliberately empty.
+#
+# The relay uses only what Python already comes with. Nothing is
+# installed, so there is nothing here that could be swapped for
+# something else between you and the people you are talking to.

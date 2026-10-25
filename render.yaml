@@ -1,0 +1,15 @@
+# This file is what lets the host set itself up, so that none of the
+# settings below have to be typed into a web form by hand.
+services:
+  - type: web
+    name: enigma-relay
+    runtime: python
+    plan: free
+    # Where the post box physically sits. It cannot be changed after
+    # the service is made, so it is set here rather than left to the
+    # default, which is Oregon. Singapore is the closest to India.
+    # Change it to frankfurt, oregon, ohio or virginia if most of the
+    # people talking are closer to one of those.
+    region: singapore
+    buildCommand: "echo nothing to build"
+    startCommand: "python relay.py"

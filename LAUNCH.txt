@@ -1,0 +1,95 @@
+PUTTING THE POST BOX ON THE INTERNET
+A free host, no Terminal, about fifteen minutes.
+
+You need two free accounts: GitHub, to hold the four files, and
+Render, to run them. Neither asks for a card.
+
+
+STEP 1 — PUT THE FILES SOMEWHERE THE HOST CAN REACH
+  github.com -> Sign up (free).
+  Once in: the + at the top right -> New repository.
+  Name it            enigma-relay
+  Leave it           Public
+  Click              Create repository
+  On the page that follows: "uploading an existing file".
+  Drag in all four files from this folder:
+        relay.py   render.yaml   requirements.txt   README.txt
+  Click Commit changes.
+
+  Public is fine, and better than private. Everyone can read the
+  relay's code, which is the point: anyone can check for themselves
+  that it only passes scrambled text along.
+
+
+STEP 2 — RUN IT
+  render.com -> Get Started -> Sign in with GitHub -> Authorize.
+  In Render: New -> Blueprint.
+  Pick your enigma-relay repository -> Connect -> Apply.
+
+  Render reads render.yaml and sets itself up. Two or three minutes.
+  Wait for the green "Live".
+
+  If Blueprint is not offered, use New -> Web Service instead, pick
+  the repository, and set:
+        Language        Python 3
+        Build Command   echo nothing to build
+        Start Command   python relay.py
+        Instance Type   Free
+        Region          Singapore
+  Then Create Web Service.
+
+  Region matters and cannot be changed afterwards. Singapore is the
+  closest to India. Pick whichever is closest to most of the people
+  who will be talking.
+
+
+STEP 3 — CHECK IT IS AWAKE
+  Render shows an address like
+        https://enigma-relay-xxxx.onrender.com
+  Open it in a browser. It should answer:
+
+        {"ok": true, "relay": true, "holding": 0,
+         "says": "A post box. It cannot read what it holds."}
+
+  That is the whole thing. It has nothing else to say.
+
+
+STEP 4 — POINT ENIGMA AT IT
+  Open Enigma -> the settings bar at the top -> Post box.
+  Paste the https address in. Press Test.
+  Tune to a frequency, type the code word, pick a name.
+
+  Give the same three things to whoever you are talking to:
+  the address, the frequency, and the code word. The first two can
+  go anywhere. The code word should not travel the same way as the
+  other two, and never through the relay.
+
+
+WHAT THE FREE PLAN WILL AND WILL NOT DO
+
+  It sleeps.  Fifteen minutes with nobody connected and Render
+  stops the service. The next person to open Enigma waits about a
+  minute for it to wake. Anything it was still holding is gone,
+  which is no loss: it forgets after an hour anyway.
+
+  It has hours, not space.  Render gives 750 running hours a month
+  and a month is about 730. So one relay, left running, just fits.
+  Two relays on one account will not.
+
+  Space is not the limit.  The relay holds 40 MB at most and drops
+  the oldest to stay under, so it cannot fill up however many
+  photos go through it.
+
+
+IF IT WILL NOT START
+  Render -> your service -> Logs. The first line should read
+        Enigma relay listening on 10000
+  No line at all usually means the Start Command is wrong. It is
+  exactly: python relay.py
+
+
+MOVING IT
+  Nothing here is particular to Render. Any host that runs Python
+  and sets a PORT will do, and moving means changing one address in
+  the Post box. Nothing is stored in the relay, so nothing is left
+  behind when you leave one.
