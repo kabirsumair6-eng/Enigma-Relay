@@ -51,16 +51,17 @@ NEXT = [1]
 # decides the connection is dead.
 WAIT_UP_TO = 25.0
 
+# Which relay this is.
+#
+# There was no way to tell a freshly deployed relay from the one it
+# replaced: /alive said the same words either way, so "did my deploy
+# actually take?" had no answer short of guessing. The app shows this
+# when you press Test.
+RELAY_VERSION = "2.1"
+
 # The most one message may weigh on the wire. Generous for typed
 # words, and about a photo's worth.
 TOO_LONG = 1200000
-
-# A name belongs to one device within one channel. The channel is
-# known only by its three-word mark, which is computed from the
-# frequency and says nothing about it.
-TAKEN = {}
-HOLD_FOR = 15 * 60
-
 
 def held_bytes():
     return sum(len(r["body"]) for r in SAID)
@@ -72,9 +73,6 @@ def tidy():
                     or len(SAID) > KEEP_MOST
                     or held_bytes() > KEEP_BYTES):
         SAID.pop(0)
-    for held, (who, when) in list(TAKEN.items()):
-        if now - when > HOLD_FOR:
-            del TAKEN[held]
 
 
 class Relay(http.server.BaseHTTPRequestHandler):
@@ -145,7 +143,8 @@ class Relay(http.server.BaseHTTPRequestHandler):
                 waited += 0.4
             self.reply({"said": [], "next": NEXT[0]})
         elif self.path in ("/", "/alive"):
-            self.reply({"ok": True, "relay": True, "holding": len(SAID),
+            self.reply({"ok": True, "relay": True, "version": RELAY_VERSION,
+                        "holding": len(SAID), "held_bytes": held_bytes(),
                         "says": "A post box. It cannot read what it holds."})
         else:
             self.reply({"error": "No such thing here."}, 404)
@@ -193,12 +192,19 @@ class Relay(http.server.BaseHTTPRequestHandler):
             self.reply({"error": "Tune in and pick a name first."})
             return
 
-        held = TAKEN.get((mark, name.lower()))
-        if held and held[0] != device:
-            self.reply({"error": "Somebody on this frequency is already "
-                                 "called " + name + ". Pick another name."})
-            return
-        TAKEN[(mark, name.lower())] = (device, time.time())
+        # Names are no longer the relay's business.
+        #
+        # This used to refuse a name already in use, because the name
+        # beside a message was all anyone had to go on. It is not any
+        # more: the sender's name is sealed inside the encryption,
+        # where this relay cannot see it or change it, and the app
+        # shows that one.
+        #
+        # Meanwhile the check could be turned around. Anyone holding
+        # this address - no frequency, no code word - could post once
+        # under your name and lock you out of it for fifteen minutes.
+        # A rule that no longer protects anything, and can be used
+        # against the people it was meant to help, is worth deleting.
 
         SAID.append({"n": NEXT[0], "from": name, "mark": mark,
                      "body": body, "at": time.time()})
@@ -223,6 +229,6 @@ class Threaded(socketserver.ThreadingMixIn, http.server.HTTPServer):
 
 
 if __name__ == "__main__":
-    print("Enigma relay listening on %d" % PORT)
+    print("Enigma relay v%s listening on %d" % (RELAY_VERSION, PORT))
     print("It holds locked messages for an hour and cannot read any of them.")
     Threaded(("0.0.0.0", PORT), Relay).serve_forever()
